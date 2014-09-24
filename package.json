@@ -1,0 +1,10 @@
+{
+  "name": "qdp",
+  "version": "1.0.0",
+  "description":"时间选择器",
+  "homepage":"http://app.qcloud.com",
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-qc-concat": "~0.1.0"
+  }
+}
