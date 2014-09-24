@@ -41,7 +41,7 @@ var str = element.value;
 
 
 ## 设置默认时间
-表单默认自动输入的时间
+表单自动输入默认的时间
 
 ```html
 <input type="date" timestamp="1411546602913"/>
@@ -68,7 +68,7 @@ var str = element.value;
 ![screenshot](https://raw.github.com/skyzhou/datepicker/master/screenshot/end.png)
 
 ## 时间组合
-考前选择的结果作为后续选择器的起始时间，靠后选择的结果作为之前选择器的结束时间
+前面选择的结果作为后续选择器的起始时间，靠后选择的结果作为之前选择器的结束时间
 
 ```html
 <input type="date" group="groupname"/>
