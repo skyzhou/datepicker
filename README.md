@@ -33,10 +33,10 @@ __demo__: [http://skyzhou.com/datepicker/index.html](http://skyzhou.com/datepick
 var element = document.getElementById("你的输入元素id");
 
 //时间戳
-element.getAttribute("timestamp")
+var timestamp = element.getAttribute("timestamp")
 
 //字符串
-element.value;
+var str = element.value;
 ```
 
 
