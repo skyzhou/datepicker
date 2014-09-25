@@ -33,6 +33,7 @@ var milliseconds = 86400000;
 var isInit = false;
 var groups = {};
 var index = 0;
+var inputs = [];
 
 function DatePicker(element){
 
@@ -119,6 +120,8 @@ function DatePicker(element){
 			that.hide();
 		}
 	})
+
+	element.setAttribute("qdp",this.id);
 
 	var defaultTime = element.getAttribute("timestamp")
 	if(defaultTime){
@@ -234,22 +237,41 @@ function bind(element){
 		lib.insertStyle(styleTpl);
 		isInit = true;
 	}
-	var group = element.getAttribute("group");
-	var picker = new DatePicker(element);
+	if(!element.getAttribute('qdp')){
+		var group = element.getAttribute("group");
+		var picker = new DatePicker(element);
 
-	if(group){
-		if(!groups[group]){
-			groups[group] = [];
+		if(group){
+			if(!groups[group]){
+				groups[group] = [];
+			}
+			groups[group].push(picker);
 		}
-		groups[group].push(picker);
 	}
 }
-lib.on(window,'load',function(){
-	var inputs = document.getElementsByTagName("input");
+function iterate(inputs){
 	for(var i=0,ipt;ipt = inputs[i];i++){
 		if(ipt.getAttribute("type") == "date"){
 			ipt.type = "text";
 			bind(ipt);
 		}
 	}
+}
+lib.on(window,'load',function(){
+	inputs = document.getElementsByTagName("input");
+	iterate(inputs);
 })
+
+if(window.define){
+	define(function(require,exports,module){
+		exports.toggle = function(){
+			iterate(inputs);
+		}
+	})
+}
+else{
+	exports.qdp = exports.qdp || {};
+	exports.qdp.toggle = function(){
+		iterate(inputs);
+	}
+}
