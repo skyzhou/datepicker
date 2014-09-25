@@ -39,17 +39,6 @@ var timestamp = element.getAttribute("timestamp")
 var str = element.value;
 ```
 
-
-## 设置默认时间
-表单自动输入默认的时间
-
-```html
-<input type="date" timestamp="1411546602913"/>
-
-```
-
-![screenshot](https://raw.github.com/skyzhou/datepicker/master/screenshot/default.png)
-
 ## 设置起始时间
 禁止选择指定时间之前的日期
 
@@ -78,29 +67,6 @@ var str = element.value;
 
 ![screenshot](https://raw.github.com/skyzhou/datepicker/master/screenshot/group.png)
 
-## 动态触发
-
-Date Picker无法触发动态插入的input，需手动触发
-
-1、模块化环境触发
-
-```js
-var picker = require('datepicker.js')
-
-//动态插入<input type="date" />
-
-picker.toggle();
-
-```
-1、普通引入方式触发
-
-```js
-
-//动态插入<input type="date" />
-
-qdp.toggle();
-
-```
 
 ## License
 

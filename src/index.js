@@ -32,8 +32,9 @@ var language = languages[nl]?languages[nl]:languages['en-us'];
 var milliseconds = 86400000;
 var isInit = false;
 var groups = {};
-var index = 0;
+var index = 1;
 var inputs = [];
+var map = {};
 
 function DatePicker(element){
 
@@ -95,39 +96,10 @@ function DatePicker(element){
 
 	element.parentNode.appendChild(this.containerEl);
 
-	lib.on(element,"click",function(){
-		var timestamp =  element.getAttribute("timestamp");
-		var begin = element.getAttribute("begin");
-		var end = element.getAttribute("end");
-		var group = element.getAttribute("group");
-		that.show(
-			function(str,date){
-				element.value = str;
-				element.setAttribute("timestamp",+date);
-				that.influence(group);
-			},
-			{
-				timestamp:timestamp,
-				begin:begin,
-				end:end
-			}
-		);
-	})
-	lib.on(document.documentElement,"click",function(evt,target){
-		evt = evt || window.event;
-		target = evt.target || evt.srcElement;
-		if(!that.containerEl.contains(target) && target !== element){
-			that.hide();
-		}
-	})
 
-	element.setAttribute("qdp",this.id);
+	element.setAttribute("dpid",this.id);
+	element.type = "text";
 
-	var defaultTime = element.getAttribute("timestamp")
-	if(defaultTime){
-		this.selected = defaultTime*1;
-		element.value = new Date(this.selected).toLocaleDateString();
-	}
 }
 
 DatePicker.prototype.setMonth = function(m){
@@ -217,17 +189,44 @@ DatePicker.prototype.setRange = function(begin,end){
 	this.element.setAttribute("begin",begin);
 	this.element.setAttribute("end",end);
 }
+DatePicker.prototype.click = function(){
+	var that = this;
+	var element = this.element;
+	var timestamp =  element.getAttribute("timestamp");
+	var begin = element.getAttribute("begin");
+	var end = element.getAttribute("end");
+	var group = element.getAttribute("group");
 
+	this.show(
+		function(str,date){
+			element.value = str;
+			element.setAttribute("timestamp",+date);
+			that.influence(group);
+		},
+		{
+			timestamp:timestamp,
+			begin:begin,
+			end:end
+		}
+	);
+}
 DatePicker.prototype.influence = function(group){
 	if(group){
 		var timestamp = +this.date;
 		for(var i=0,item;item = groups[group][i];i++){
-			if(item.id < this.id){
-				item.setRange("",timestamp);
+			if(!item.element.parentNode){
+				groups[group].splice(i,1);
+				i--;
 			}
-			else if(item.id > this.id){
-				item.setRange(timestamp-milliseconds,"");
+			else{
+				if(item.id < this.id){
+					item.setRange("",timestamp);
+				}
+				else if(item.id > this.id){
+					item.setRange(timestamp-milliseconds,"");
+				}
 			}
+			
 		}
 	}
 }
@@ -237,33 +236,56 @@ function bind(element){
 		lib.insertStyle(styleTpl);
 		isInit = true;
 	}
-	if(!element.getAttribute('qdp')){
-		var group = element.getAttribute("group");
-		var picker = new DatePicker(element);
+	
+	var group = element.getAttribute("group");
+	var picker = new DatePicker(element);
 
-		if(group){
-			if(!groups[group]){
-				groups[group] = [];
+	if(group){
+		if(!groups[group]){
+			groups[group] = [];
+		}
+		groups[group].push(picker);
+	}
+	map[picker.id] = picker;
+	
+	return picker.id;
+}
+
+
+lib.on(window,'load',function(){
+	lib.on(document.documentElement,"click",function(evt,target){
+		evt = evt || window.event;
+		target = evt.target || evt.srcElement;
+
+		var type = target.getAttribute("type");
+		var tag = target.nodeName.toLowerCase();
+		var dpid = target.getAttribute("dpid");
+		var isDateIpt = type === "date" && tag === "input";
+		var picker,item;
+
+		for(var p in map){
+			item = map[p];
+			if(item){
+				if(!item.element.parentNode){
+					map[p] == null;
+				}
+				else if(!item.containerEl.contains(target)){
+					item.hide();
+				}
 			}
-			groups[group].push(picker);
+			
 		}
-	}
-}
-function iterate(){
-	inputs = document.getElementsByTagName("input");
-	for(var i=0,ipt;ipt = inputs[i];i++){
-		if(ipt.getAttribute("type") == "date"){
-			ipt.type = "text";
-			bind(ipt);
-		}
-	}
-}
-if(!require){
-	lib.on(window,'load',function(){
-		iterate();
-	})
-}
 
-exports.toggle = function(){
-	iterate(inputs);
-}
+		if(isDateIpt || dpid){
+			dpid = target.getAttribute('dpid');
+			if(!dpid){
+				dpid = bind(target);
+			}
+			picker = map[dpid];
+			picker.click();
+		}
+	})
+})
+
+
+module.exports = {}
