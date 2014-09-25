@@ -78,6 +78,30 @@ var str = element.value;
 
 ![screenshot](https://raw.github.com/skyzhou/datepicker/master/screenshot/group.png)
 
+## 动态触发
+
+Date Picker无法触发动态插入的input，需手动触发
+
+1、模块化环境触发
+
+```js
+var picker = require('datepicker.js')
+
+//动态插入<input type="date" />
+
+picker.toggle();
+
+```
+1、普通引入方式触发
+
+```js
+
+//动态插入<input type="date" />
+
+qdp.toggle();
+
+```
+
 ## License
 
 MIT

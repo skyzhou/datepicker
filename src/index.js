@@ -257,21 +257,13 @@ function iterate(inputs){
 		}
 	}
 }
-lib.on(window,'load',function(){
-	inputs = document.getElementsByTagName("input");
-	iterate(inputs);
-})
-
-if(window.define){
-	define(function(require,exports,module){
-		exports.toggle = function(){
-			iterate(inputs);
-		}
+if(!require){
+	lib.on(window,'load',function(){
+		inputs = document.getElementsByTagName("input");
+		iterate(inputs);
 	})
 }
-else{
-	exports.qdp = exports.qdp || {};
-	exports.qdp.toggle = function(){
-		iterate(inputs);
-	}
+
+exports.toggle = function(){
+	iterate(inputs);
 }

@@ -1,4 +1,12 @@
-;(function(exports){
+;(function(global,factory){
+	if(typeof global.define === 'function'){
+		global.define(factory);
+	}
+	else{
+		global.qdp = {};
+		factory(null,global.qdp)
+	}
+}(window,function(require,exports){
 var lib = {};
 lib.tmpl = function(){
 	var cache = {};
@@ -451,22 +459,15 @@ function iterate(inputs){
 		}
 	}
 }
-lib.on(window,'load',function(){
-	inputs = document.getElementsByTagName("input");
-	iterate(inputs);
-})
-
-if(window.define){
-	define(function(require,exports,module){
-		exports.toggle = function(){
-			iterate(inputs);
-		}
+if(!require){
+	lib.on(window,'load',function(){
+		inputs = document.getElementsByTagName("input");
+		iterate(inputs);
 	})
 }
-else{
-	exports.qdp = exports.qdp || {};
-	exports.qdp.toggle = function(){
-		iterate(inputs);
-	}
+
+exports.toggle = function(){
+	iterate(inputs);
 }
-})(window);
+
+}));
