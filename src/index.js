@@ -249,7 +249,8 @@ function bind(element){
 		}
 	}
 }
-function iterate(inputs){
+function iterate(){
+	inputs = document.getElementsByTagName("input");
 	for(var i=0,ipt;ipt = inputs[i];i++){
 		if(ipt.getAttribute("type") == "date"){
 			ipt.type = "text";
@@ -259,8 +260,7 @@ function iterate(inputs){
 }
 if(!require){
 	lib.on(window,'load',function(){
-		inputs = document.getElementsByTagName("input");
-		iterate(inputs);
+		iterate();
 	})
 }
 
