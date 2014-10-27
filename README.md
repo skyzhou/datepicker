@@ -46,15 +46,12 @@ var str = element.value;
 <input type="date" begin="1411546602913"/>
 ```
 
-![screenshot](https://raw.github.com/skyzhou/datepicker/master/screenshot/begin.png)
-
 ## 设置结束时间
 禁止选择指定时间之后的日期
 
 ```html
 <input type="date" end="1411546602913"/>
 ```
-![screenshot](https://raw.github.com/skyzhou/datepicker/master/screenshot/end.png)
 
 ## 时间组合
 前面选择的结果作为后续选择器的起始时间，靠后选择的结果作为之前选择器的结束时间
@@ -65,8 +62,19 @@ var str = element.value;
 <input type="date" group="groupname"/>
 ```
 
-![screenshot](https://raw.github.com/skyzhou/datepicker/master/screenshot/group.png)
+## 重新初始化
+当页面结构非直出或页面结构发生改变时，通知组件重新初始化
 
+```js
+var datepicker = require("datepicker");
+datepicker.trigger();
+```
+
+或者
+
+```js
+qdp.trigger();
+```
 
 ## License
 

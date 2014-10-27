@@ -3,6 +3,7 @@
 		global.define(factory);
 	}
 	else{
-		factory(null,null,{})
+		global.qdp = {};
+		factory(null,global.qdp)
 	}
-}(window,function(require,exports,module){
+}(window,function(require,exports){

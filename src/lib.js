@@ -64,12 +64,61 @@ lib.parseDate = function(date){
 }
 
 lib.on =  function (elem, event, fn) {
+
+		var callback = function(evt,target){
+			evt = evt || window.event;
+			target = evt.target || evt.srcElement;
+			fn.call(target,evt)
+		}
+
 		if (elem.addEventListener)  // W3C
-			elem.addEventListener(event, fn, true);
+			elem.addEventListener(event, callback, true);
 		else if (elem.attachEvent) { // IE
-			elem.attachEvent("on"+ event, fn);
+			elem.attachEvent("on"+ event, callback);
 		}
 };
+
+lib.ready = function(fn){
+	var fired = false;
+
+    function trigger() {
+      if (fired) return;
+      fired = true;
+      fn();
+    }
+
+    if (document.readyState === 'complete'){
+      setTimeout(trigger);
+    } else {
+      this.on(document,'DOMContentLoaded', trigger); 
+      this.on(window,'load', trigger); 
+    }
+}
+lib.format = function(date){
+	return date.toLocaleDateString().replace(/(\d{4}).(\d{2}).(\d{2})./,"$1/$2/$3");
+}
+lib.getClientRect  =function(elem){
+	try {
+	    var box =  elem.getBoundingClientRect(),rect = {};
+	    //ie8- 没有width和height
+	    if(box.width){
+	    	rect = box;
+	    	box.width = box.right-box.left;
+	    	box.height = box.bottom - box.top;
+	    }
+	    else{
+	    	rect = {
+	    		top:box.top,
+	    		right:box.right,
+	    		bottom:box.bottom,
+	    		left:box.left,
+	    		width:box.right-box.left,
+	    		height:box.bottom - box.top
+	    	}
+	    }
+		return rect;
+	} catch (e) {return {}} 
+}
 ;(function(){
 	
 	var _defaultGetEventkeyFn = function(elem){
@@ -188,6 +237,5 @@ lib.on =  function (elem, event, fn) {
 			
 		}
 		lib.on(topElem, type, hdl);
-		
 	};	
 })();

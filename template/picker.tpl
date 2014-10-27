@@ -1,12 +1,14 @@
 <template name="DATE.PICKER.BAR">
-	<a class="qdp-prev"  data-evt="prev">&#9668;</a>
+	<div class="qdp-arrow"></div>
+	<div class="qdp-arrow" style="border-bottom-color: #f7f7f7;top: -10px;"></div>
+	<a class="qdp-prev"  data-evt="prev">&lt;</a>
 	<label class="qdp-year"></label><%=year%>
 	<select>
 		<% for(var i=0,mon;mon = months[i];i++){ %>
 			<option  data-evt="onmonth" value="<%=i%>"><%=mon%></option>
 		<% } %>
 	</select><%=month%>
-	<a class="qdp-next"  data-evt="next">&#9658;</a>
+	<a class="qdp-next"  data-evt="next">&gt;</a>
 </template>	
 
 <template name="DATE.PICKER.DAY">

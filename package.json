@@ -5,6 +5,7 @@
   "homepage":"http://app.qcloud.com",
   "devDependencies": {
     "grunt": "~0.4.2",
+    "grunt-contrib-uglify": "~0.1.2",
     "grunt-qc-concat": "~0.1.0"
   }
 }

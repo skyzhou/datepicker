@@ -5,26 +5,42 @@
 		min-height:183px;
 		font-size:12px;
 		font-family: Tahoma;
-		border:1px solid #ccc;
+		border:1px solid #D1D1D1;
 		padding:1px;
-		z-index:999;
+		z-index:9999;
 		user-select: none;
 		-webkit-user-select: none;
+		background: #fff;
 	}
 	.qdp-container ul,.qdp-container li{
 		list-style: none;
 		padding:0px;
 		margin:0px;
 	}
+
+	.qdp-arrow{
+		position:absolute;
+		display:block;
+		width:0;
+		height:0;
+		border-color:transparent;
+		border-style:solid;
+		border-width:11px;
+		left:50%;
+		margin-left:-11px;
+		border-top-width:0;
+		border-bottom-color:#D1D1D1;
+		top:-12px
+	}
+
 	.qdp-bar{
-		height:18px;
-		border: 1px solid #EDEDED;
-		background: #F1F1F1 url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAABkCAYAAABHLFpgAAAAI0lEQVQYlWP4+fPnfyYGBgaGIUT8//+fkBiCS7oETjuGCQEAOoIcmZfyoHUAAAAASUVORK5CYIIvKiAgfHhHdjAwfDM2OTUzYjI0MmU1NzNlMWE3OTgzMTMzMjlmZDg1MDEyICov) 50% 50% repeat-x;
-		color: #222;
+		height: 20px;
+		background: #f7f7f7;
+		color: #404a58;
 		font-weight: bold;
 		width: 201px;
 		position: relative;
-		padding:4px;
+		padding: 10px 5px;
 	}
 	.qdp-bar select{
 		width: 72px;
@@ -37,6 +53,7 @@
 		display: block;
 		cursor: pointer;
 		margin:1px;
+		color:#ababab;
 		font-family: Menlo, "Courier New",Courier,monospace;
 	}
 	.qdp-prev{
@@ -55,6 +72,7 @@
 	}
 	.qdp-days{
 		margin-top: 6px;
+		color:#91959c;
 	}
 	.qdp-days li{
 		float:left;
@@ -68,41 +86,39 @@
 		clear:both;
 	}
 	.qdp-dates li{
-		float:left;
-		width:19px;
-		height:20px;
+		float: left;
+		width: 19px;
+		height: 18px;
 		padding: 1px;
-		margin:1px;
-		text-align: right;
-		line-height: 20px;
-		text-align:right;
-		line-height: 20px;
-		padding-right: 6px;
+		margin: 3px;
+		text-align: center;
+		line-height: 19px;
+		padding-right: 2px;
 	}
 	.qdp-date-item{
-		background:#E6E6E6 url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAGQCAYAAABvWArbAAAANUlEQVQ4je3LMQoAIBADwb38/6t5wFXaWAiCtUiaYZvF9hBACOFbuntVVe11B0CSjjeE8BwThQIJ8dhEl0YAAAAASUVORK5CYIIvKiAgfHhHdjAwfDJkMmY3OGEyZjJlYzlhZmNlMzM2YTQ4MGFkYzhhYmEwICov) 50% 50% repeat-x;
-		border:1px solid #D3D3D3;
+		border:1px solid #fff;
 		cursor: pointer;
-		color: #555;
+		color: #171d25;
 	}
 	.qdp-empty{
-		background:#fff;
 		border:1px solid #fff;
 	}
 	.qdp-date-item:hover{
-		border:1px solid #707070;
+		background:#f7f7f7;
+		color: #171d25;
 	}
 	.qdp-disable{
-		background:#EAEAEA;
-		border:1px solid #D3D3D3;
+		border:1px solid #fff;
 		cursor: not-allowed;
-		color:#D4D4D4;
+		color:#a2a2a2;
 	}
 	.qdp-today{
-		border:1px solid #ccc;
-		background: #FFF;
+		border:1px solid #0071ce;
+		color: #0071ce;
 	}
-	.qdp-selected{
-		border:1px solid #707070;
+	.qdp-selected,.qdp-selected:hover{
+		border:1px solid #0071ce;
+		background:#0071ce;
+		color:#fff;
 	}
 </template>	

@@ -30,262 +30,285 @@ var nl = (navigator.language||navigator.browserLanguage||"en-us").toLowerCase();
 var language = languages[nl]?languages[nl]:languages['en-us'];
 
 var milliseconds = 86400000;
-var isInit = false;
 var groups = {};
 var index = 1;
 var inputs = [];
-var map = {};
+var panel = null;
+var max = 32495136761757;
+var hdls = {change:{}};
 
-function DatePicker(element){
+function influence(option){
+	var timestamp = option.timestamp;
+	var group = option.group;
+	var dpid = option.dpid;
 
-	var that = this;
+	var begin = '',end='';
 
-	this.id = ++index;
-	this.element = element;
-	this.date = new Date();
-	this.begin = 0;
-	this.end = 32495136761757;
-	this.callback = null;
-	this.selected = null;
-
-	this.containerEl = document.createElement('div');
-	this.containerEl.style.display = "none"
-	
-
-	this.barEl = document.createElement('div');
-	this.dayEl = document.createElement('ul');
-	this.dateEl = document.createElement('ul');
-	this.clearEl = document.createElement('div');
-
-	this.containerEl.appendChild(this.barEl);
-	this.containerEl.appendChild(this.dayEl);
-	this.containerEl.appendChild(this.dateEl);
-	this.containerEl.appendChild(this.clearEl);
-
-	this.containerEl.className = "qdp-container"
-	this.barEl.className = "qdp-bar"
-	this.dayEl.className = "qdp-days"
-	this.dateEl.className = "qdp-dates"
-	this.clearEl.style.clear = "both";
-
-	this.dayEl.innerHTML = lib.tmpl(dayTpl,{days:language.days})
-
-	this.barEl.innerHTML = lib.tmpl(barTpl,language);
-
-	this.yearEl = this.barEl.getElementsByTagName('label')[0];
-	this.monthEl = this.barEl.getElementsByTagName('select')[0];
-
-	this.monthEl.onchange = function(){
-		that.setMonth(this.value);
-	}
-
-	lib.event(this.barEl,"click",{
-		"prev":function(){
-			that.setYear(that.date.getFullYear()-1);
-		},
-		"next":function(){
-			that.setYear(that.date.getFullYear()+1);
+	for(var i=0,element;element = groups[group][i];i++){
+		//该节点可能已经不存在
+		if(!document.documentElement.contains(element)){
+			groups[group].splice(i,1);
+			i--;
 		}
-	})
-	lib.event(this.dateEl,"click",{
-		"ondate":function(){
-			var d = this.innerText;
-			that.setDate(d);
-		}
-	})
-
-	element.parentNode.appendChild(this.containerEl);
-
-
-	element.setAttribute("dpid",this.id);
-	element.type = "text";
-
-}
-
-DatePicker.prototype.setMonth = function(m){
-	this.date.setMonth(m);
-	this.render();
-}
-DatePicker.prototype.setYear = function(y){
-	this.date.setFullYear(y)
-	this.render();
-}
-DatePicker.prototype.setDate = function(d){
-	this.date.setDate(d);
-	this.render();
-	this.callback(this.date.toLocaleDateString(),this.date);
-	this.hide();
-}
-DatePicker.prototype.render = function(option){
-
-	option = option || {};
-
-	var parts = lib.parseDate(this.date);
-
-	var year = parts.year;
-	var month = parts.month;
-	var count = parts.count;
-	var emptys = parts.emptys;
-	var first = parts.first;
-	var last = parts.last;
-
-	var today = new Date();
-	var current = -1;
-	var dates = [];
-
-	if(today > first && today < last){
-		current = today.getDate();
-	}
-
-	for(var i=0;i<count;i++){
-		var timestamp = first+i*86400000,date = i+1,cls = 'qdp-date-item',evt = "ondate",offset;
-		if(timestamp < this.begin || timestamp > this.end){
-			cls = 'qdp-disable';
-			evt = "ondisable"
-		}
-		if(current == i+1){
-			cls += " qdp-today";
-		}
-		if(this.selected){
-			offset = this.selected - timestamp;
-			if(offset >0 && offset < milliseconds){
-				cls += " qdp-selected";
-			}
-		}
-		dates.push({date:date,cls:cls,evt:evt});
-	}
-
-	this.yearEl.innerHTML = year;
-	this.monthEl.selectedIndex = month;
-	this.dateEl.innerHTML = lib.tmpl(dateTpl,{
-		dates:dates,
-		emptys:emptys
-	})
-}
-DatePicker.prototype.show = function(callback,option){
-	option = option || {};
-
-	if(option.timestamp){
-		this.date = new Date(option.timestamp*1);
-		this.selected = option.timestamp;
-	}
-	if(option.begin){
-		this.begin = option.begin*1;
-	}
-	if(option.end){
-		this.end = option.end*1;
-	}
-
-	this.callback = callback;
-	this.render(option);
-	this.containerEl.style.left = this.element.offsetLeft+"px";
-	this.containerEl.style.top = this.element.offsetTop+this.element.offsetHeight+"px";
-	this.containerEl.style.display = "block";
-}
-DatePicker.prototype.hide = function(){
-	this.containerEl.style.display = "none"
-}
-DatePicker.prototype.setRange = function(begin,end){
-	this.element.setAttribute("begin",begin);
-	this.element.setAttribute("end",end);
-}
-DatePicker.prototype.click = function(){
-	var that = this;
-	var element = this.element;
-	var timestamp =  element.getAttribute("timestamp");
-	var begin = element.getAttribute("begin");
-	var end = element.getAttribute("end");
-	var group = element.getAttribute("group");
-
-	this.show(
-		function(str,date){
-			element.value = str;
-			element.setAttribute("timestamp",+date);
-			that.influence(group);
-		},
-		{
-			timestamp:timestamp,
-			begin:begin,
-			end:end
-		}
-	);
-}
-DatePicker.prototype.influence = function(group){
-	if(group){
-		var timestamp = +this.date;
-		for(var i=0,item;item = groups[group][i];i++){
-			if(!item.element.parentNode){
-				groups[group].splice(i,1);
-				i--;
-			}
-			else{
-				if(item.id < this.id){
-					item.setRange("",timestamp);
+		else{
+			var iDpid = element.getAttribute('dpid');
+			if(iDpid !== dpid){
+				if(iDpid < dpid){
+					end = timestamp;
 				}
-				else if(item.id > this.id){
-					item.setRange(timestamp-milliseconds,"");
+				else{
+					begin = timestamp-milliseconds
 				}
+				element.setAttribute("begin",begin);
+				element.setAttribute("end",end);
 			}
-			
 		}
 	}
 }
 
 function bind(element){
-	if(!isInit){
-		lib.insertStyle(styleTpl);
-		isInit = true;
+
+	element.setAttribute("dpid",++index);
+	element.type = "text";
+
+	var timestamp = element.getAttribute("timestamp");
+
+	var begin = element.getAttribute("begin");
+	var end = element.getAttribute("end");
+
+	if(timestamp){
+		element.value = lib.format(new Date(timestamp*1));
 	}
-	
+
+	if(!begin){
+		begin = 0;
+	}
+	if(!end){
+		end = max;
+	}
+
+	element.setAttribute('range',[begin,end].join(','))
+
 	var group = element.getAttribute("group");
-	var picker = new DatePicker(element);
 
 	if(group){
 		if(!groups[group]){
 			groups[group] = [];
 		}
-		groups[group].push(picker);
+		groups[group].push(element);
 	}
-	map[picker.id] = picker;
-	
-	return picker.id;
+
+}
+function iterate(){
+	for(var i=0,item;item = inputs[i];i++){
+		if(item.getAttribute("type") === "date" && item.nodeName.toLowerCase() === "input"){
+			bind(item);
+		}
+	}
 }
 
+function Panel(){
+	
+	var that = this,pMain,pBar,pDay,pDate,pYear,pMonth,pOption,dOption,dDate;
 
-lib.on(window,'load',function(){
-	lib.on(document.documentElement,"click",function(evt,target){
-		evt = evt || window.event;
-		target = evt.target || evt.srcElement;
+	/**
+	 *创建选择器面板
+	 */
+	pMain = document.createElement('div');
+	pMain.style.display = "none"
 
-		var type = target.getAttribute("type");
-		var tag = target.nodeName.toLowerCase();
-		var dpid = target.getAttribute("dpid");
-		var isDateIpt = type === "date" && tag === "input";
-		var picker,item;
 
-		for(var p in map){
-			item = map[p];
-			if(item){
-				if(!item.element.parentNode){
-					map[p] == null;
-				}
-				else if(!item.containerEl.contains(target)){
-					item.hide();
-				}
-			}
-			
+	pBar = document.createElement('div');
+	pDay = document.createElement('ul');
+	pDate = document.createElement('ul');
+
+	pMain.appendChild(pBar);
+	pMain.appendChild(pDay);
+	pMain.appendChild(pDate);
+
+	pMain.className = "qdp-container"
+	pBar.className = "qdp-bar"
+	pDay.className = "qdp-days"
+	pDate.className = "qdp-dates"
+
+	pDay.innerHTML = lib.tmpl(dayTpl,{days:language.days})
+
+	pBar.innerHTML = lib.tmpl(barTpl,language);
+
+	pYear = pBar.getElementsByTagName('label')[0];
+	pMonth = pBar.getElementsByTagName('select')[0];
+
+	dOption = {
+		timestamp:+new Date(),
+		callback:function(){},
+		x:0,
+		y:0,
+		begin:0,
+		end:max,
+		range:[0,max]
+
+	}
+
+	pOption = {};
+
+	this.show = function(option){
+		for(var p in dOption){
+			pOption[p] = option[p] || dOption[p];
 		}
 
-		if(isDateIpt || dpid){
-			dpid = target.getAttribute('dpid');
-			if(!dpid){
-				dpid = bind(target);
+		dDate = new Date(pOption.timestamp);
+
+		this.render();
+		pMain.style.left = pOption.x+'px';
+		pMain.style.top = pOption.y+'px';
+
+		pMain.style.display = "block"
+	}
+	this.hide = function(){
+		pMain.style.display = "none"
+	}
+	this.contains = function(element){
+		return pMain.contains(element);
+	}
+
+	this.render = function(){
+		var parts = lib.parseDate(dDate);
+
+		var year = parts.year;
+		var month = parts.month;
+		var count = parts.count;
+		var emptys = parts.emptys;
+		var first = parts.first;
+		var last = parts.last;
+
+		var today = new Date();
+		var current = -1;
+		var dates = [];
+
+		var begin = pOption.begin;
+		var end = pOption.end;
+		var range = pOption.range.split(',');
+
+		if(begin < range[0]){
+			begin = range[0];
+		}
+
+		if(end > range[1]){
+			end = range[1];
+		}
+
+		if(today > first && today < last){
+			current = today.getDate();
+		}
+
+		for(var i=0;i<count;i++){
+			var timestamp = first+i*milliseconds,date = i+1,cls = 'qdp-date-item',evt = "ondate",offset;
+
+			if(timestamp < begin || timestamp > end){
+				cls = 'qdp-disable';
+				evt = "ondisable"
 			}
-			picker = map[dpid];
-			picker.click();
+			if(current == i+1){
+				cls += " qdp-today";
+			}
+		
+			offset = pOption.timestamp - timestamp;
+			if(offset >0 && offset < milliseconds){
+				cls += " qdp-selected";
+			}
+
+			dates.push({date:date,cls:cls,evt:evt});
+		}
+
+		pYear.innerHTML = year;
+		pMonth.selectedIndex = month;
+
+		pDate.innerHTML = lib.tmpl(dateTpl,{
+			dates:dates,
+			emptys:emptys
+		})
+	}
+
+	document.body.appendChild(pMain);
+
+	pMonth.onchange = function(){
+		dDate.setMonth(this.value);
+		that.render()
+	}
+
+	lib.event(pBar,"click",{
+		"prev":function(){
+			dDate.setFullYear(dDate.getFullYear()-1)
+			that.render()
+		},
+		"next":function(){
+			dDate.setFullYear(dDate.getFullYear()+1)
+			that.render()
+		}
+	})
+	lib.event(pDate,"click",{
+		"ondate":function(){
+			dDate.setDate(this.innerText);
+			pOption.callback(dDate);
+			that.hide();
+		}
+	})
+}
+
+lib.ready(function(){
+	
+	lib.insertStyle(styleTpl);
+
+	panel = new Panel();
+
+	inputs = document.getElementsByTagName("input");
+	iterate();
+
+	lib.on(document.documentElement,"click",function(evt){
+
+		var target = this,dpid = target.getAttribute("dpid"),group,timestamp,cid;
+	
+		if(panel.contains(this)){
+			return;
+		}
+		else if(dpid){
+
+			var rect = lib.getClientRect(target);
+			panel.show({
+				x:rect.left,
+				y:rect.top+rect.height+10,
+				timestamp:this.getAttribute("timestamp")*1,
+				begin:this.getAttribute("begin"),
+				end:this.getAttribute("end"),
+				range:this.getAttribute('range'),
+				callback:function(date){
+					timestamp = +date;
+					target.setAttribute('timestamp',timestamp);
+					target.value = lib.format(date);
+
+					if(group = target.getAttribute("group")){
+						influence({
+							group:group,
+							timestamp:+date,
+							dpid:dpid
+						})
+					}
+
+					cid = target.getAttribute('cid');
+					if(cid && hdls.change[cid]){
+						hdls.change[cid].call(target,timestamp);
+					}
+				}
+			})
+		}
+		else{
+			panel.hide();
 		}
 	})
 })
 
 
-module.exports = {}
+exports.trigger = iterate;
+exports.change = function(cid,fn){
+	hdls.change[cid] = fn;
+}
