@@ -11,8 +11,6 @@
 
 ![screenshot](https://raw.github.com/skyzhou/datepicker/master/screenshot/screenshot.png)
 
-__demo__: [http://skyzhou.com/datepicker/index.html](http://skyzhou.com/datepicker/index.html)
-
 1、引入datepicker.min.js
 
 ```html
