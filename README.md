@@ -74,6 +74,19 @@ datepicker.trigger();
 qdp.trigger();
 ```
 
+## 监听日期选中事件
+1、在input标签上添加cid属性
+```html
+<input type="date" cid="yourcidvalue"/>
+```
+2、添加监听日期选择事件的回调函数
+```js
+var datepicker = require("datepicker");
+datepicker.change("yourcidvalue", function(){
+	//your code
+})
+```
+
 ## License
 
 MIT
