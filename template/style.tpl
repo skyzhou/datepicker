@@ -11,6 +11,7 @@
 		user-select: none;
 		-webkit-user-select: none;
 		background: #fff;
+		box-sizing: content-box;
 	}
 	.qdp-container ul,.qdp-container li{
 		list-style: none;
@@ -42,13 +43,6 @@
 		position: relative;
 		padding: 10px 5px;
 	}
-	.qdp-bar select{
-		width: 72px;
-		margin: 0px 5px;
-		height:18px;
-		vertical-align: middle;
-		outline: none;
-	}
 	.qdp-prev,.qdp-next{
 		display: block;
 		cursor: pointer;
@@ -66,7 +60,7 @@
 		position:absolute;
 	}
 	.qdp-year{
-		margin-left: 24px;
+		margin-left: 58px;
 		position: relative;
 		top: 1px;
 	}

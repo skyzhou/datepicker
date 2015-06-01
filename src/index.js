@@ -135,8 +135,9 @@ function Panel(){
 
 	pBar.innerHTML = lib.tmpl(barTpl,language);
 
-	pYear = pBar.getElementsByTagName('label')[0];
-	pMonth = pBar.getElementsByTagName('select')[0];
+	var labels = pBar.getElementsByTagName('label');
+	pYear = labels[0];
+	pMonth = labels[1];
 
 	dOption = {
 		timestamp:+new Date(),
@@ -221,7 +222,7 @@ function Panel(){
 		}
 
 		pYear.innerHTML = year;
-		pMonth.selectedIndex = month;
+		pMonth.innerHTML = month+1;
 
 		pDate.innerHTML = lib.tmpl(dateTpl,{
 			dates:dates,
@@ -231,27 +232,18 @@ function Panel(){
 
 	document.body.appendChild(pMain);
 
-	pMonth.onchange = function(){
-		dDate.setMonth(this.value);
+	lib.click('prev',function(){
+		dDate.setMonth(dDate.getMonth()-1)
 		that.render()
-	}
-
-	lib.event(pBar,"click",{
-		"prev":function(){
-			dDate.setFullYear(dDate.getFullYear()-1)
-			that.render()
-		},
-		"next":function(){
-			dDate.setFullYear(dDate.getFullYear()+1)
-			that.render()
-		}
 	})
-	lib.event(pDate,"click",{
-		"ondate":function(){
-			dDate.setDate(this.innerText);
-			pOption.callback(dDate);
-			that.hide();
-		}
+	lib.click('next',function(){
+		dDate.setMonth(dDate.getMonth()+1)
+		that.render()
+	})
+	lib.click('ondate',function(){
+		dDate.setDate(this.innerText);
+		pOption.callback(dDate);
+		that.hide();
 	})
 }
 
@@ -264,7 +256,7 @@ lib.ready(function(){
 	inputs = document.getElementsByTagName("input");
 	iterate();
 
-	lib.on(document.documentElement,"click",function(evt){
+	lib.on("click",function(evt){
 
 		var target = this,dpid = target.getAttribute("dpid"),group,timestamp,cid;
 	
@@ -277,10 +269,10 @@ lib.ready(function(){
 			panel.show({
 				x:rect.left,
 				y:rect.top+rect.height+10,
-				timestamp:this.getAttribute("timestamp")*1,
-				begin:this.getAttribute("begin"),
-				end:this.getAttribute("end"),
-				range:this.getAttribute('range'),
+				timestamp:target.getAttribute("timestamp")*1,
+				begin:target.getAttribute("begin"),
+				end:target.getAttribute("end"),
+				range:target.getAttribute('range'),
 				callback:function(date){
 					timestamp = +date;
 					target.setAttribute('timestamp',timestamp);
@@ -293,11 +285,6 @@ lib.ready(function(){
 							dpid:dpid
 						})
 					}
-
-					cid = target.getAttribute('cid');
-					if(cid && hdls.change[cid]){
-						hdls.change[cid].call(target,timestamp);
-					}
 				}
 			})
 		}
@@ -307,8 +294,4 @@ lib.ready(function(){
 	})
 })
 
-
 exports.trigger = iterate;
-exports.change = function(cid,fn){
-	hdls.change[cid] = fn;
-}

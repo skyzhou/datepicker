@@ -20,5 +20,6 @@ module.exports = function(grunt){
 	});
 	grunt.loadNpmTasks('grunt-qc-concat');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.registerTask('default',['concat','uglify']);
+    grunt.registerTask('default',['concat']);
+    grunt.registerTask('publish',['concat','uglify']);
 }

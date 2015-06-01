@@ -1,6 +1,6 @@
 ;(function(global,factory){
 	if(typeof global.define === 'function'){
-		global.define(factory);
+		global.define('datepicker',factory);
 	}
 	else{
 		global.qdp = {};
@@ -72,20 +72,6 @@ lib.parseDate = function(date){
 	return result
 }
 
-lib.on =  function (elem, event, fn) {
-
-		var callback = function(evt,target){
-			evt = evt || window.event;
-			target = evt.target || evt.srcElement;
-			fn.call(target,evt)
-		}
-
-		if (elem.addEventListener)  // W3C
-			elem.addEventListener(event, callback, true);
-		else if (elem.attachEvent) { // IE
-			elem.attachEvent("on"+ event, callback);
-		}
-};
 
 lib.ready = function(fn){
 	var fired = false;
@@ -99,8 +85,8 @@ lib.ready = function(fn){
     if (document.readyState === 'complete'){
       setTimeout(trigger);
     } else {
-      this.on(document,'DOMContentLoaded', trigger); 
-      this.on(window,'load', trigger); 
+      this.addEventListener(document,'DOMContentLoaded', trigger); 
+      this.addEventListener(window,'load', trigger); 
     }
 }
 lib.format = function(date){
@@ -130,130 +116,126 @@ lib.getClientRect  =function(elem){
 }
 ;(function(){
 	
-	var _defaultGetEventkeyFn = function(elem){
-		return elem.getAttribute("data-evt");
-	};
-	
-	//默认判断是否有事件的函数
-	var _defalutJudgeFn = function(elem){
-		return !!elem.getAttribute("data-evt");
-	};
+	var handlers = {};
+	var clicks = {};
 
-	var getEvent = function(evt) {
-		var evt = window.event || evt, c, cnt;
-		if (!evt && window.Event) {
-			c = arguments.callee;
-			cnt = 0;
-			while (c) {
-				if ((evt = c.arguments[0]) && typeof (evt.srcElement) != "undefined") {
-					break;
-				} else if (cnt > 9) {
-					break;
+	var callback = function(e){
+
+		var type = e.type;
+
+		if(type == 'touchend'){
+			type = 'click'
+		}
+
+		var target = e.target || e.srcElement;
+
+		if(handlers[type] && handlers[type].length){
+			var prevent = false;
+
+			for(var i=0,hdl;hdl = handlers[type][i];i++){
+				if(false === hdl.call(target,e)){
+					prevent = true;
 				}
-				c = c.caller;
-				++cnt;
 			}
-		}
-		return evt;
-	};
-
-	
-
-	var preventDefault = function(evt) {
-		evt = getEvent(evt);
-		if (!evt) {
-			return false;
-		}
-		if (evt.preventDefault) {
-			evt.preventDefault();
-		} else {
-			evt.returnValue = false;
+			
+			if(prevent && e.preventDefault){
+				e.preventDefault();
+            	e.stopPropagation();
+			}
 		}
 	}
-	
-	/**
-	 * 在事件触发时，取得想要的元素
-	 * @param evt 事件对象
-	 * @param topElem 查找的最终祖先节点，从事件起始元素向上查找到此元素为止
-	 * @param judgeFn 判断是否目标元素的函数
-	 */
-	var getWantTarget = function(evt,topElem, judgeFn){
-		
-		judgeFn = judgeFn || this.judgeFn || _defalutJudgeFn;
-		
-		var _targetE = evt.srcElement || evt.target;
-		
-		while( _targetE  ){
-			
-			if(judgeFn(_targetE)){
-				return _targetE;
-			}
-			
-			if( topElem == _targetE ){
-				break;
-			}
-		
-			_targetE = _targetE.parentNode;
+	lib.addEventListener = function(element,type, callback){
+		if (element.addEventListener)  // W3C
+			element.addEventListener(type, callback, true);
+		else if (elem.attachEvent) { // IE
+			element.attachEvent("on"+ type, callback);
 		}
-		return null;
-	};
-	/**
-	 * 通用的绑定事件处理
-	 * @param {Element} 要绑定事件的元素
-	 * @param {String} 绑定的事件类型
-	 * @param {Object} 事件处理的函数映射
-	 * @param {Function} 取得事件对应的key的函数
-	 */
-	lib.event = function(topElem, type, dealFnMap, getEventkeyFn){
-		
-		getEventkeyFn =  getEventkeyFn || _defaultGetEventkeyFn;
-		
-		var judgeFn  = function(elem){
-			return !!getEventkeyFn(elem);
-		};
+	}
+	////////////////////////
+	lib.on = function(types,hdl){
 
-		var hdl = function(e){
-			/**
-			 * 支持直接绑定方法
-			 */
-			var _target = getWantTarget(e, topElem, judgeFn),_hit = false;
-			
-			if(_target){
-				var _event = getEventkeyFn(_target);
-				var _returnValue;
+		types = types.split(',');
+		for(var i=0,type;type = types[i];i++){
+			//第一次添加该类型则:
+			//1
+			if(!handlers[type]){
+				handlers[type] = [];
+			}
+			//2
+			if(handlers[type].length < 1){
+				var element = document.documentElement;
+				if (type === 'click' && 'ontouchstart' in element) {
+					(function(){
 
+						var x1=0,y1=0,x2=0,y2=0,flag = false;
+						element.addEventListener('touchstart',function(e){
 
-				if(Object.prototype.toString.call(dealFnMap)==="[object Function]"){
-					_returnValue = dealFnMap.call(_target,e,_event);
-					_hit = true
+							var touch = e.touches[0];
+							x1 = touch.pageX;
+							y1 = touch.pageY;
+
+							flag = false;
+
+						})
+						element.addEventListener('touchmove',function(e){
+							
+							var touch = e.touches[0];
+							x2 = touch.pageX;
+							y2 = touch.pageY;
+							
+							flag = true;
+						})
+						element.addEventListener('touchend',function(e){
+							if(flag){
+								var offset = Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2));
+								if(offset < 5){
+									callback(e)
+								}
+							}
+							else{
+								callback(e)
+							}
+							
+						})
+					})()
 				}
 				else{
-					if( dealFnMap[_event]){
-						_returnValue = dealFnMap[_event].call(_target, e)
-						_hit = true;
-					}
-				}
-				if(_hit){
-					if(!_returnValue){
-						if(e.preventDefault)
-			                e.preventDefault();
-			            else
-			                e.returnValue = false
-					}
-				}
+					lib.addEventListener(element,type,callback);	
+				} 
 				
 			}
-			
+
+			handlers[type].push(hdl);
 		}
-		lib.on(topElem, type, hdl);
-	};	
+	}
+	lib.click = function(name,hdl){
+
+		lib.on('click',function(e){
+			var target = this;
+			while(target && target.nodeType == 1){
+				var name = target.getAttribute('data-click');
+				if(name && clicks[name]){
+					return clicks[name].call(this,target);
+					break;
+				}
+
+				target = target.parentNode;
+			}
+		})
+
+		lib.click = function(name,hdl){
+
+			clicks[name] = hdl;
+		}
+		lib.click(name,hdl);
+	}
 })();
 
 
-var styleTpl = '.qdp-container{position:absolute;width:211px;min-height:183px;font-size:12px;font-family: Tahoma;border:1px solid #D1D1D1;padding:1px;z-index:9999;user-select: none;-webkit-user-select: none;background: #fff;}.qdp-container ul,.qdp-container li{list-style: none;padding:0px;margin:0px;}.qdp-arrow{position:absolute;display:block;width:0;height:0;border-color:transparent;border-style:solid;border-width:11px;left:50%;margin-left:-11px;border-top-width:0;border-bottom-color:#D1D1D1;top:-12px}.qdp-bar{height: 20px;background: #f7f7f7;color: #404a58;font-weight: bold;width: 201px;position: relative;padding: 10px 5px;}.qdp-bar select{width: 72px;margin: 0px 5px;height:18px;vertical-align: middle;outline: none;}.qdp-prev,.qdp-next{display: block;cursor: pointer;margin:1px;color:#ababab;font-family: Menlo, "Courier New",Courier,monospace;}.qdp-prev{float:left;}.qdp-next{float:right;}.qdp-bar ul{position:absolute;}.qdp-year{margin-left: 24px;position: relative;top: 1px;}.qdp-days{margin-top: 6px;color:#91959c;}.qdp-days li{float:left;height:22px;width:30px;text-align:center;font-weight: bold;margin-top:6px;}.qdp-dates{clear:both;}.qdp-dates li{float: left;width: 19px;height: 18px;padding: 1px;margin: 3px;text-align: center;line-height: 19px;padding-right: 2px;}.qdp-date-item{border:1px solid #fff;cursor: pointer;color: #171d25;}.qdp-empty{border:1px solid #fff;}.qdp-date-item:hover{background:#f7f7f7;color: #171d25;}.qdp-disable{border:1px solid #fff;cursor: not-allowed;color:#a2a2a2;}.qdp-today{border:1px solid #0071ce;color: #0071ce;}.qdp-selected,.qdp-selected:hover{border:1px solid #0071ce;background:#0071ce;color:#fff;}';
-var barTpl = '<div class="qdp-arrow"></div><div class="qdp-arrow" style="border-bottom-color: #f7f7f7;top: -10px;"></div><a class="qdp-prev"  data-evt="prev">&lt;</a><label class="qdp-year"></label><%=year%><select><% for(var i=0,mon;mon = months[i];i++){ %><option  data-evt="onmonth" value="<%=i%>"><%=mon%></option><% } %></select><%=month%><a class="qdp-next"  data-evt="next">&gt;</a>';
+var styleTpl = '.qdp-container{position:absolute;width:211px;min-height:183px;font-size:12px;font-family: Tahoma;border:1px solid #D1D1D1;padding:1px;z-index:9999;user-select: none;-webkit-user-select: none;background: #fff;box-sizing: content-box;}.qdp-container ul,.qdp-container li{list-style: none;padding:0px;margin:0px;}.qdp-arrow{position:absolute;display:block;width:0;height:0;border-color:transparent;border-style:solid;border-width:11px;left:50%;margin-left:-11px;border-top-width:0;border-bottom-color:#D1D1D1;top:-12px}.qdp-bar{height: 20px;background: #f7f7f7;color: #404a58;font-weight: bold;width: 201px;position: relative;padding: 10px 5px;}.qdp-prev,.qdp-next{display: block;cursor: pointer;margin:1px;color:#ababab;font-family: Menlo, "Courier New",Courier,monospace;}.qdp-prev{float:left;}.qdp-next{float:right;}.qdp-bar ul{position:absolute;}.qdp-year{margin-left: 58px;position: relative;top: 1px;}.qdp-days{margin-top: 6px;color:#91959c;}.qdp-days li{float:left;height:22px;width:30px;text-align:center;font-weight: bold;margin-top:6px;}.qdp-dates{clear:both;}.qdp-dates li{float: left;width: 19px;height: 18px;padding: 1px;margin: 3px;text-align: center;line-height: 19px;padding-right: 2px;}.qdp-date-item{border:1px solid #fff;cursor: pointer;color: #171d25;}.qdp-empty{border:1px solid #fff;}.qdp-date-item:hover{background:#f7f7f7;color: #171d25;}.qdp-disable{border:1px solid #fff;cursor: not-allowed;color:#a2a2a2;}.qdp-today{border:1px solid #0071ce;color: #0071ce;}.qdp-selected,.qdp-selected:hover{border:1px solid #0071ce;background:#0071ce;color:#fff;}';
+var barTpl = '<div class="qdp-arrow"></div><div class="qdp-arrow" style="border-bottom-color: #f7f7f7;top: -10px;"></div><a class="qdp-prev"  data-click="prev">&lt;</a><label class="qdp-year"></label><%=year%><label class="qdp-month"></label><%=month%><a class="qdp-next"  data-click="next">&gt;</a>';
 var dayTpl = '<% for(var i=0,day;day = days[i];i++){ %><li><%=day%></li><% } %>';
-var dateTpl = '<% for(var i=0;i<emptys;i++){ %><li  class="qdp-empty">&nbsp;</li><% } %><% for(var i=0,item;item=dates[i];i++){ %><li class="<%=item.cls%>"  data-evt="<%=item.evt%>"><%=item.date%></li><% } %>';
+var dateTpl = '<% for(var i=0;i<emptys;i++){ %><li  class="qdp-empty">&nbsp;</li><% } %><% for(var i=0,item;item=dates[i];i++){ %><li class="<%=item.cls%>"  data-click="<%=item.evt%>"><%=item.date%></li><% } %>';
 
 var languages = {
 	"zh-cn":{
@@ -385,8 +367,9 @@ function Panel(){
 
 	pBar.innerHTML = lib.tmpl(barTpl,language);
 
-	pYear = pBar.getElementsByTagName('label')[0];
-	pMonth = pBar.getElementsByTagName('select')[0];
+	var labels = pBar.getElementsByTagName('label');
+	pYear = labels[0];
+	pMonth = labels[1];
 
 	dOption = {
 		timestamp:+new Date(),
@@ -471,7 +454,7 @@ function Panel(){
 		}
 
 		pYear.innerHTML = year;
-		pMonth.selectedIndex = month;
+		pMonth.innerHTML = month+1;
 
 		pDate.innerHTML = lib.tmpl(dateTpl,{
 			dates:dates,
@@ -481,27 +464,18 @@ function Panel(){
 
 	document.body.appendChild(pMain);
 
-	pMonth.onchange = function(){
-		dDate.setMonth(this.value);
+	lib.click('prev',function(){
+		dDate.setMonth(dDate.getMonth()-1)
 		that.render()
-	}
-
-	lib.event(pBar,"click",{
-		"prev":function(){
-			dDate.setFullYear(dDate.getFullYear()-1)
-			that.render()
-		},
-		"next":function(){
-			dDate.setFullYear(dDate.getFullYear()+1)
-			that.render()
-		}
 	})
-	lib.event(pDate,"click",{
-		"ondate":function(){
-			dDate.setDate(this.innerText);
-			pOption.callback(dDate);
-			that.hide();
-		}
+	lib.click('next',function(){
+		dDate.setMonth(dDate.getMonth()+1)
+		that.render()
+	})
+	lib.click('ondate',function(){
+		dDate.setDate(this.innerText);
+		pOption.callback(dDate);
+		that.hide();
 	})
 }
 
@@ -514,7 +488,7 @@ lib.ready(function(){
 	inputs = document.getElementsByTagName("input");
 	iterate();
 
-	lib.on(document.documentElement,"click",function(evt){
+	lib.on("click",function(evt){
 
 		var target = this,dpid = target.getAttribute("dpid"),group,timestamp,cid;
 	
@@ -527,10 +501,10 @@ lib.ready(function(){
 			panel.show({
 				x:rect.left,
 				y:rect.top+rect.height+10,
-				timestamp:this.getAttribute("timestamp")*1,
-				begin:this.getAttribute("begin"),
-				end:this.getAttribute("end"),
-				range:this.getAttribute('range'),
+				timestamp:target.getAttribute("timestamp")*1,
+				begin:target.getAttribute("begin"),
+				end:target.getAttribute("end"),
+				range:target.getAttribute('range'),
 				callback:function(date){
 					timestamp = +date;
 					target.setAttribute('timestamp',timestamp);
@@ -543,11 +517,6 @@ lib.ready(function(){
 							dpid:dpid
 						})
 					}
-
-					cid = target.getAttribute('cid');
-					if(cid && hdls.change[cid]){
-						hdls.change[cid].call(target,timestamp);
-					}
 				}
 			})
 		}
@@ -557,10 +526,6 @@ lib.ready(function(){
 	})
 })
 
-
 exports.trigger = iterate;
-exports.change = function(cid,fn){
-	hdls.change[cid] = fn;
-}
 
 }));

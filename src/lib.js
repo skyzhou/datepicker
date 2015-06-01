@@ -63,20 +63,6 @@ lib.parseDate = function(date){
 	return result
 }
 
-lib.on =  function (elem, event, fn) {
-
-		var callback = function(evt,target){
-			evt = evt || window.event;
-			target = evt.target || evt.srcElement;
-			fn.call(target,evt)
-		}
-
-		if (elem.addEventListener)  // W3C
-			elem.addEventListener(event, callback, true);
-		else if (elem.attachEvent) { // IE
-			elem.attachEvent("on"+ event, callback);
-		}
-};
 
 lib.ready = function(fn){
 	var fired = false;
@@ -90,8 +76,8 @@ lib.ready = function(fn){
     if (document.readyState === 'complete'){
       setTimeout(trigger);
     } else {
-      this.on(document,'DOMContentLoaded', trigger); 
-      this.on(window,'load', trigger); 
+      this.addEventListener(document,'DOMContentLoaded', trigger); 
+      this.addEventListener(window,'load', trigger); 
     }
 }
 lib.format = function(date){
@@ -121,121 +107,117 @@ lib.getClientRect  =function(elem){
 }
 ;(function(){
 	
-	var _defaultGetEventkeyFn = function(elem){
-		return elem.getAttribute("data-evt");
-	};
-	
-	//默认判断是否有事件的函数
-	var _defalutJudgeFn = function(elem){
-		return !!elem.getAttribute("data-evt");
-	};
+	var handlers = {};
+	var clicks = {};
 
-	var getEvent = function(evt) {
-		var evt = window.event || evt, c, cnt;
-		if (!evt && window.Event) {
-			c = arguments.callee;
-			cnt = 0;
-			while (c) {
-				if ((evt = c.arguments[0]) && typeof (evt.srcElement) != "undefined") {
-					break;
-				} else if (cnt > 9) {
-					break;
+	var callback = function(e){
+
+		var type = e.type;
+
+		if(type == 'touchend'){
+			type = 'click'
+		}
+
+		var target = e.target || e.srcElement;
+
+		if(handlers[type] && handlers[type].length){
+			var prevent = false;
+
+			for(var i=0,hdl;hdl = handlers[type][i];i++){
+				if(false === hdl.call(target,e)){
+					prevent = true;
 				}
-				c = c.caller;
-				++cnt;
 			}
-		}
-		return evt;
-	};
-
-	
-
-	var preventDefault = function(evt) {
-		evt = getEvent(evt);
-		if (!evt) {
-			return false;
-		}
-		if (evt.preventDefault) {
-			evt.preventDefault();
-		} else {
-			evt.returnValue = false;
+			
+			if(prevent && e.preventDefault){
+				e.preventDefault();
+            	e.stopPropagation();
+			}
 		}
 	}
-	
-	/**
-	 * 在事件触发时，取得想要的元素
-	 * @param evt 事件对象
-	 * @param topElem 查找的最终祖先节点，从事件起始元素向上查找到此元素为止
-	 * @param judgeFn 判断是否目标元素的函数
-	 */
-	var getWantTarget = function(evt,topElem, judgeFn){
-		
-		judgeFn = judgeFn || this.judgeFn || _defalutJudgeFn;
-		
-		var _targetE = evt.srcElement || evt.target;
-		
-		while( _targetE  ){
-			
-			if(judgeFn(_targetE)){
-				return _targetE;
-			}
-			
-			if( topElem == _targetE ){
-				break;
-			}
-		
-			_targetE = _targetE.parentNode;
+	lib.addEventListener = function(element,type, callback){
+		if (element.addEventListener)  // W3C
+			element.addEventListener(type, callback, true);
+		else if (elem.attachEvent) { // IE
+			element.attachEvent("on"+ type, callback);
 		}
-		return null;
-	};
-	/**
-	 * 通用的绑定事件处理
-	 * @param {Element} 要绑定事件的元素
-	 * @param {String} 绑定的事件类型
-	 * @param {Object} 事件处理的函数映射
-	 * @param {Function} 取得事件对应的key的函数
-	 */
-	lib.event = function(topElem, type, dealFnMap, getEventkeyFn){
-		
-		getEventkeyFn =  getEventkeyFn || _defaultGetEventkeyFn;
-		
-		var judgeFn  = function(elem){
-			return !!getEventkeyFn(elem);
-		};
+	}
+	////////////////////////
+	lib.on = function(types,hdl){
 
-		var hdl = function(e){
-			/**
-			 * 支持直接绑定方法
-			 */
-			var _target = getWantTarget(e, topElem, judgeFn),_hit = false;
-			
-			if(_target){
-				var _event = getEventkeyFn(_target);
-				var _returnValue;
+		types = types.split(',');
+		for(var i=0,type;type = types[i];i++){
+			//第一次添加该类型则:
+			//1
+			if(!handlers[type]){
+				handlers[type] = [];
+			}
+			//2
+			if(handlers[type].length < 1){
+				var element = document.documentElement;
+				if (type === 'click' && 'ontouchstart' in element) {
+					(function(){
 
+						var x1=0,y1=0,x2=0,y2=0,flag = false;
+						element.addEventListener('touchstart',function(e){
 
-				if(Object.prototype.toString.call(dealFnMap)==="[object Function]"){
-					_returnValue = dealFnMap.call(_target,e,_event);
-					_hit = true
+							var touch = e.touches[0];
+							x1 = touch.pageX;
+							y1 = touch.pageY;
+
+							flag = false;
+
+						})
+						element.addEventListener('touchmove',function(e){
+							
+							var touch = e.touches[0];
+							x2 = touch.pageX;
+							y2 = touch.pageY;
+							
+							flag = true;
+						})
+						element.addEventListener('touchend',function(e){
+							if(flag){
+								var offset = Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2));
+								if(offset < 5){
+									callback(e)
+								}
+							}
+							else{
+								callback(e)
+							}
+							
+						})
+					})()
 				}
 				else{
-					if( dealFnMap[_event]){
-						_returnValue = dealFnMap[_event].call(_target, e)
-						_hit = true;
-					}
-				}
-				if(_hit){
-					if(!_returnValue){
-						if(e.preventDefault)
-			                e.preventDefault();
-			            else
-			                e.returnValue = false
-					}
-				}
+					lib.addEventListener(element,type,callback);	
+				} 
 				
 			}
-			
+
+			handlers[type].push(hdl);
 		}
-		lib.on(topElem, type, hdl);
-	};	
+	}
+	lib.click = function(name,hdl){
+
+		lib.on('click',function(e){
+			var target = this;
+			while(target && target.nodeType == 1){
+				var name = target.getAttribute('data-click');
+				if(name && clicks[name]){
+					return clicks[name].call(this,target);
+					break;
+				}
+
+				target = target.parentNode;
+			}
+		})
+
+		lib.click = function(name,hdl){
+
+			clicks[name] = hdl;
+		}
+		lib.click(name,hdl);
+	}
 })();
